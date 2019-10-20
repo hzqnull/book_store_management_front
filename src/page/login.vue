@@ -3,22 +3,19 @@
 	  	<transition name="form-fade" mode="in-out">
 	  		<section class="form_contianer" v-show="showLogin">
 		  		<div class="manage_tip">
-		  			<p>elm后台管理系统</p>
+		  			<p>网上书城后台管理系统</p>
 		  		</div>
 		    	<el-form :model="loginForm" :rules="rules" ref="loginForm">
 					<el-form-item prop="username">
 						<el-input v-model="loginForm.username" placeholder="用户名"><span>dsfsf</span></el-input>
 					</el-form-item>
 					<el-form-item prop="password">
-						<el-input type="password" placeholder="密码" v-model="loginForm.password"></el-input>
+						<el-input type="password" placeholder="密码" v-model="loginForm.password" @keyup.enter.native='submitForm'></el-input>
 					</el-form-item>
 					<el-form-item>
-				    	<el-button type="primary" @click="submitForm('loginForm')" class="submit_btn">登陆</el-button>
+				    	<el-button type="primary" @click="submitForm('loginForm')" class="submit_btn">登录</el-button>
 				  	</el-form-item>
 				</el-form>
-				<p class="tip">温馨提示：</p>
-				<p class="tip">未登录过的新用户，自动注册</p>
-				<p class="tip">注册过的用户可凭账号密码登录</p>
 	  		</section>
 	  	</transition>
   	</div>
@@ -58,41 +55,70 @@
 		methods: {
 			...mapActions(['getAdminData']),
 			async submitForm(formName) {
-				this.$refs[formName].validate(async (valid) => {
-					if (valid) {
-						const res = await login({user_name: this.loginForm.username, password: this.loginForm.password})
-						if (res.status == 1) {
-							this.$message({
-		                        type: 'success',
-		                        message: '登录成功'
-		                    });
-							this.$router.push('manage')
-						}else{
-							this.$message({
-		                        type: 'error',
-		                        message: res.message
-		                    });
-						}
-					} else {
-						this.$notify.error({
-							title: '错误',
-							message: '请输入正确的用户名密码',
-							offset: 100
+				this.$axios.post('/adminLogin', {
+					username: this.loginForm.username,
+					password: this.loginForm.password
+				})
+				.then((response)=> {
+					if (response.data.status!='success') {
+						this.$message({
+							type: 'error',
+							message: response.data.errmsg
 						});
-						return false;
+					} else {
+						this.$message({
+							type: 'success',
+							message: '登录成功'
+						});
+						this.$router.push('manage')
 					}
+				})
+				.catch((error)=> {
+					console.log(error);
 				});
+				// this.$notify.error({
+				// 	title: '错误',
+				// 	message: '请输入正确的用户名密码',
+				// 	offset: 100
+				// });
+		
+
+
+				// this.$refs[formName].validate(async (valid) => {
+				// 	if (valid) {
+				// 		const res = await login({user_name: this.loginForm.username, password: this.loginForm.password})
+				// 		if (res.status == 1) {
+				// 			this.$message({
+		        //                 type: 'success',
+		        //                 message: '登录成功'
+		        //             });
+				// 			this.$router.push('manage')
+				// 		}else{
+				// 			this.$message({
+		        //                 type: 'error',
+		        //                 message: res.message
+		        //             });
+				// 		}
+				// 	} else {
+				// 		this.$notify.error({
+				// 			title: '错误',
+				// 			message: '请输入正确的用户名密码',
+				// 			offset: 100
+				// 		});
+				// 		return false;
+				// 	}
+				// });
 			},
 		},
 		watch: {
 			adminInfo: function (newValue){
-				if (newValue.id) {
-					this.$message({
-                        type: 'success',
-                        message: '检测到您之前登录过，将自动登录'
-                    });
-					this.$router.push('manage')
-				}
+				// if (newValue.id) {
+				// 	this.$message({
+                //         type: 'success',
+                //         message: '检测到您之前登录过，将自动登录'
+                //     });
+				// 	this.$router.push('manage')
+				// }
 			}
 		}
 	}

@@ -17,20 +17,29 @@
                 </el-table-column>
                 <el-table-column
                   property="username"
-                  label="用户姓名"
+                  label="用户昵称"
                   width="220">
                 </el-table-column>
                 <el-table-column
-                  property="city"
-                  label="注册地址">
+                  property="email"
+                  label="邮箱"
+                  width="220">
+                </el-table-column>
+                <el-table-column
+                  property="telephone"
+                  label="电话号码"
+                  width="220">
+                </el-table-column>
+                <el-table-column
+                  property="introduce"
+                  label="介绍">
                 </el-table-column>
             </el-table>
             <div class="Pagination" style="text-align: left;margin-top: 10px;">
                 <el-pagination
-                  @size-change="handleSizeChange"
                   @current-change="handleCurrentChange"
                   :current-page="currentPage"
-                  :page-size="20"
+                  :page-size="pageSize"
                   layout="total, prev, pager, next"
                   :total="count">
                 </el-pagination>
@@ -46,67 +55,82 @@
         data(){
             return {
                 tableData: [{
-                  registe_time: '2016-05-02',
-                  username: '王小虎',
-                  city: '上海市普陀区金沙江路 1518 弄'
-                }, {
-                  registe_time: '2016-05-04',
-                  username: '王小虎',
-                  city: '上海市普陀区金沙江路 1517 弄'
-                }, {
-                  registe_time: '2016-05-01',
-                  username: '王小虎',
-                  city: '上海市普陀区金沙江路 1519 弄'
-                }, {
-                  registe_time: '2016-05-03',
-                  username: '王小虎',
-                  city: '上海市普陀区金沙江路 1516 弄'
+                  registe_time: '2019-05-02',
+                  username: '老王',
+                  email: '1234566@qq.com',
+                  telephone: '13800138000',
+                  introduce: 'hello,我是老王'
                 }],
                 currentRow: null,
                 offset: 0,
                 limit: 20,
                 count: 0,
                 currentPage: 1,
+                pageSize: 50,
+                pageCount:1
             }
         },
     	components: {
     		headTop,
     	},
         created(){
+            //获取总条数
+            this.$axios.get('/userCount')
+            .then((response)=> {
+                this.count = response.data.data;
+            })
+            .catch((error)=> {
+                console.log(error);
+            })
+
             this.initData();
         },
         methods: {
             async initData(){
-                try{
-                    const countData = await getUserCount();
-                    if (countData.status == 1) {
-                        this.count = countData.count;
-                    }else{
-                        throw new Error('获取数据失败');
-                    }
-                    this.getUsers();
-                }catch(err){
-                    console.log('获取数据失败', err);
-                }
-            },
-            handleSizeChange(val) {
-                console.log(`每页 ${val} 条`);
+                this.getData(1);
             },
             handleCurrentChange(val) {
                 this.currentPage = val;
-                this.offset = (val - 1)*this.limit;
-                this.getUsers()
+                this.getData(this.currentPage);
+            },
+            //从服务端获取数据
+            getData(val) {
+                this.$axios.get('/usersByPaging/'+val+'/'+this.pageSize)
+                .then((response)=> {
+                    console.log(response);
+                    if (response.data.status=='success') {
+                        const Users = response.data.data;
+                        this.tableData = [];
+                        Users.forEach(item => {
+                            const tableData = {};
+                            tableData.username = item.username;
+                            tableData.registe_time = item.registTime;
+                            tableData.email = item.email;
+                            tableData.telephone = item.telephone;
+                            tableData.introduce = item.introduce;
+                            this.tableData.push(tableData);
+                        })
+                    } else {
+                        console.log(response);
+                    }
+                })
+                .catch((error)=> {
+                    console.log(error);
+                })
             },
             async getUsers(){
-                const Users = await getUserList({offset: this.offset, limit: this.limit});
-                this.tableData = [];
-                Users.forEach(item => {
-                    const tableData = {};
-                    tableData.username = item.username;
-                    tableData.registe_time = item.registe_time;
-                    tableData.city = item.city;
-                    this.tableData.push(tableData);
-                })
+                // const Users = await getUserList({offset: this.offset, limit: this.limit});
+                this.$axios.get('/users')
+				.then((response)=> {
+					if (response.data.status!='success') {
+						console.log(response);
+					} else {
+						console.log(response);
+					}
+				})
+				.catch((error)=> {
+					console.log(error);
+				});
             }
         },
     }

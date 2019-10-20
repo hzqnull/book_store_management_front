@@ -6,31 +6,35 @@
 		      :data="tableData"
 		      style="width: 100%">
 		      <el-table-column
-		        prop="user_name"
+		        prop="username"
 		        label="姓名"
 		        width="180">
 		      </el-table-column>
 		      <el-table-column
-		        prop="create_time"
+		        prop="registTime"
 		        label="注册日期"
-		        width="220">
+		        width="250">
 		      </el-table-column>
               <el-table-column
-                prop="city"
-                label="地址"
+                prop="telephone"
+                label="电话"
                 width="180">
               </el-table-column>
+              <el-table-column
+                prop="email"
+                label="电子邮箱"
+                width="250">
+              </el-table-column>
 		      <el-table-column
-		        prop="admin"
+		        prop="auth"
 		        label="权限">
 		      </el-table-column>
 		    </el-table>
 		    <div class="Pagination" style="text-align: left;margin-top: 10px;">
                 <el-pagination
-                  @size-change="handleSizeChange"
                   @current-change="handleCurrentChange"
                   :current-page="currentPage"
-                  :page-size="20"
+                  :page-size="pageSize"
                   layout="total, prev, pager, next"
                   :total="count">
                 </el-pagination>
@@ -50,6 +54,7 @@
                 offset: 0,
                 limit: 20,
                 count: 0,
+                pageSize: 20,
                 currentPage: 1,
             }
         },
@@ -57,9 +62,36 @@
     		headTop,
     	},
         created(){
-            this.initData();
+            //获取条数
+            this.$axios.get('/adminCount')
+            .then((response)=> {
+                this.count = response.data.data;
+            })
+            .catch((error)=> {
+                console.log(error);
+            });
+
+            this.getAdmins();
         },
         methods: {
+            async getAdmins() {
+                this.$axios.get('/admins')
+                .then((response)=> {
+                    this.tableData = [];
+                    	response.data.data.forEach(item => {
+                    		const tableItem = {
+                    			registTime: item.registTime,
+						        username: item.username,
+						        auth: item.introduce,
+                                telephone: item.telephone,
+                                email: item.email
+                    		}
+                    		this.tableData.push(tableItem)
+                    	})
+                })
+                .catch();
+            },
+
             async initData(){
                 try{
                     const countData = await adminCount();

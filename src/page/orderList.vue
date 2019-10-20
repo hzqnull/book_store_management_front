@@ -12,19 +12,19 @@
 			      <template slot-scope="props">
 			        <el-form label-position="left" inline class="demo-table-expand">
 			          <el-form-item label="用户名" >
-			            <span>{{ props.row.user_name }}</span>
+			            <span>{{ props.row.receiverName }}</span>
 			          </el-form-item>
-			          <el-form-item label="店铺名称">
-			            <span>{{ props.row.restaurant_name }}</span>
+			          <el-form-item label="收货人电话">
+			            <span>{{ props.row.receiverPhone }}</span>
 			          </el-form-item>
 			          <el-form-item label="收货地址">
-			            <span>{{ props.row.address }}</span>
+			            <span>{{ props.row.receiverAddress }}</span>
 			          </el-form-item>
-			          <el-form-item label="店铺 ID">
-			            <span>{{ props.row.restaurant_id }}</span>
+			          <el-form-item label="用户ID">
+			            <span>{{ props.row.user_id }}</span>
 			          </el-form-item>
-			          <el-form-item label="店铺地址">
-			            <span>{{ props.row.restaurant_address }}</span>
+			          <el-form-item label="创建时间">
+			            <span>{{ props.row.ordertime }}</span>
 			          </el-form-item>
 			        </el-form>
 			      </template>
@@ -44,10 +44,9 @@
 			</el-table>
             <div class="Pagination" style="text-align: left;margin-top: 10px;">
                 <el-pagination
-                  @size-change="handleSizeChange"
                   @current-change="handleCurrentChange"
                   :current-page="currentPage"
-                  :page-size="20"
+                  :page-size="pageSize"
                   layout="total, prev, pager, next"
                   :total="count">
                 </el-pagination>
@@ -67,6 +66,7 @@
                 offset: 0,
                 limit: 20,
                 count: 0,
+                pageSize: 20,
                 currentPage: 1,
                 restaurant_id: null,
                 expendRow: [],
@@ -76,13 +76,45 @@
     		headTop,
     	},
         created(){
-        	this.restaurant_id = this.$route.query.restaurant_id;
-            this.initData();
+            // this.restaurant_id = this.$route.query.restaurant_id;
+            this.$axios.get('/orderCount')
+            .then((response)=> {
+                this.count = response.data.data;
+            })
+            .catch((error)=> {
+                console.log(error);
+            });
+            this.getOrders();
         },
         mounted(){
 
         },
         methods: {
+            async getOrders() {
+                this.$axios.get('/orders')
+                .then((response)=> {
+                    console.log(response.data.data);
+                    const Orders = response.data.data;
+                    this.tableData = [];
+                    Orders.forEach((item, index) => {
+                        const tableData = {};
+                        tableData.id = item.id;
+                        tableData.total_amount = item.money;
+                        tableData.status = item.paystate;
+                        tableData.user_id = item.user_id;
+                        tableData.ordertime = item.ordertime;
+                        tableData.receiverAddress = item.receiverAddress;
+                        tableData.receiverName = item.receiverName;
+                        tableData.receiverPhone = item.receiverPhone;
+                        tableData.index = index;
+                        this.tableData.push(tableData);
+                    })
+                })
+                .catch((error)=> {
+                    console.log(error);
+                })
+            },
+
             async initData(){
                 try{
                     const countData = await getOrderCount({restaurant_id: this.restaurant_id});
@@ -96,43 +128,40 @@
                     console.log('获取数据失败', err);
                 }
             },
-            handleSizeChange(val) {
-                console.log(`每页 ${val} 条`);
-            },
             handleCurrentChange(val) {
                 this.currentPage = val;
                 this.offset = (val - 1)*this.limit;
-                this.getOrders()
+                this.getOrders();
             },
-            async getOrders(){
-                const Orders = await getOrderList({offset: this.offset, limit: this.limit, restaurant_id: this.restaurant_id});
-                this.tableData = [];
-                Orders.forEach((item, index) => {
-                    const tableData = {};
-                    tableData.id = item.id;
-                    tableData.total_amount = item.total_amount;
-                    tableData.status = item.status_bar.title;
-                    tableData.user_id = item.user_id;
- 					tableData.restaurant_id = item.restaurant_id;
- 					tableData.address_id = item.address_id;
-                    tableData.index = index;
-                    this.tableData.push(tableData);
-                })
-            },
+            // async getOrders(){
+            //     const Orders = await getOrderList({offset: this.offset, limit: this.limit, restaurant_id: this.restaurant_id});
+            //     this.tableData = [];
+            //     Orders.forEach((item, index) => {
+            //         const tableData = {};
+            //         tableData.id = item.id;
+            //         tableData.total_amount = item.total_amount;
+            //         tableData.status = item.status_bar.title;
+            //         tableData.user_id = item.user_id;
+ 			// 		tableData.restaurant_id = item.restaurant_id;
+ 			// 		tableData.address_id = item.address_id;
+            //         tableData.index = index;
+            //         this.tableData.push(tableData);
+            //     })
+            // },
             async expand(row, status){
-            	if (status) {
-            		const restaurant = await getResturantDetail(row.restaurant_id);
-	            	const userInfo = await getUserInfo(row.user_id);
-	            	const addressInfo = await getAddressById(row.address_id);
+            	// if (status) {
+            	// 	const restaurant = await getResturantDetail(row.restaurant_id);
+	            // 	const userInfo = await getUserInfo(row.user_id);
+	            // 	const addressInfo = await getAddressById(row.address_id);
 
-	                this.tableData.splice(row.index, 1, {...row, ...{restaurant_name: restaurant.name, restaurant_address: restaurant.address, address: addressInfo.address, user_name: userInfo.username}});
-                    this.$nextTick(() => {
-                        this.expendRow.push(row.index);
-                    })
-	            }else{
-                    const index = this.expendRow.indexOf(row.index);
-                    this.expendRow.splice(index, 1)
-                }
+	            //     this.tableData.splice(row.index, 1, {...row, ...{restaurant_name: restaurant.name, restaurant_address: restaurant.address, address: addressInfo.address, user_name: userInfo.username}});
+                //     this.$nextTick(() => {
+                //         this.expendRow.push(row.index);
+                //     })
+	            // }else{
+                //     const index = this.expendRow.indexOf(row.index);
+                //     this.expendRow.splice(index, 1)
+                // }
             },
         },
     }

@@ -5,18 +5,18 @@
 			<header class="section_title">数据统计</header>
 			<el-row :gutter="20" style="margin-bottom: 10px;">
                 <el-col :span="4"><div class="data_list today_head"><span class="data_num head">当日数据：</span></div></el-col>
-				<el-col :span="4"><div class="data_list"><span class="data_num">{{userCount}}</span> 新增用户</div></el-col>
-				<el-col :span="4"><div class="data_list"><span class="data_num">{{orderCount}}</span> 新增订单</div></el-col>
-                <el-col :span="4"><div class="data_list"><span class="data_num">{{adminCount}}</span> 新增管理员</div></el-col>
+				<el-col :span="4"><div class="data_list"><span class="data_num">{{todayUserCount}}</span> 新增用户</div></el-col>
+				<el-col :span="4"><div class="data_list"><span class="data_num">{{todayOrderCount}}</span> 新增订单</div></el-col>
+                <el-col :span="4"><div class="data_list"><span class="data_num">{{todayIncomeCount}}</span> 营业额</div></el-col>
 			</el-row>
             <el-row :gutter="20">
                 <el-col :span="4"><div class="data_list all_head"><span class="data_num head">总数据：</span></div></el-col>
                 <el-col :span="4"><div class="data_list"><span class="data_num">{{allUserCount}}</span> 注册用户</div></el-col>
                 <el-col :span="4"><div class="data_list"><span class="data_num">{{allOrderCount}}</span> 订单</div></el-col>
-                <el-col :span="4"><div class="data_list"><span class="data_num">{{allAdminCount}}</span> 管理员</div></el-col>
+                <el-col :span="4"><div class="data_list"><span class="data_num">{{allIncomeCount}}</span> 总营业额</div></el-col>
             </el-row>
 		</section>
-		<tendency :sevenDate='sevenDate' :sevenDay='sevenDay'></tendency>
+		<!-- <tendency :sevenDate='sevenDate' :sevenDay='sevenDay'></tendency> -->
     </div>
 </template>
 
@@ -28,14 +28,14 @@
     export default {
     	data(){
     		return {
-    			userCount: null,
-    			orderCount: null,
-                adminCount: null,
+    			todayUserCount: null,
+    			todayOrderCount: null,
+                todayIncomeCount: null,
                 allUserCount: null,
                 allOrderCount: null,
-                allAdminCount: null,
-    			sevenDay: [],
-    			sevenDate: [[],[],[]],
+                allIncomeCount: null,
+    			// sevenDay: [],
+    			// sevenDate: [[],[],[]],
     		}
     	},
     	components: {
@@ -43,12 +43,26 @@
     		tendency,
     	},
     	mounted(){
-    		this.initData();
-    		for (let i = 6; i > -1; i--) {
-    			const date = dtime(new Date().getTime() - 86400000*i).format('YYYY-MM-DD')
-    			this.sevenDay.push(date)
-    		}
-    		this.getSevenData();
+			this.$axios.get('/statistic')
+			.then((response=> {
+				console.log(response);
+				this.todayUserCount = response.data.data.todayUserCount;
+				this.todayOrderCount = response.data.data.todayOrderCount;
+				this.todayIncomeCount = response.data.data.todayIncome;
+				this.allUserCount = response.data.data.allUserCount;
+				this.allOrderCount = response.data.data.allOrderCount;
+				this.allIncomeCount = response.data.data.allIncome;
+			}))
+			.catch((error=> {
+				console.log(error);
+			}));
+
+    		// this.initData();
+    		// for (let i = 6; i > -1; i--) {
+    		// 	const date = dtime(new Date().getTime() - 86400000*i).format('YYYY-MM-DD')
+    		// 	this.sevenDay.push(date)
+    		// }
+    		// this.getSevenData();
     	},
         computed: {
 

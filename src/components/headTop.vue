@@ -9,7 +9,7 @@
 			<img :src="baseImgPath + adminInfo.avatar" class="avator">
 			<el-dropdown-menu slot="dropdown">
 				<el-dropdown-item command="home">首页</el-dropdown-item>
-				<el-dropdown-item command="signout">退出</el-dropdown-item>
+				<el-dropdown-item command="logout">退出</el-dropdown-item>
 			</el-dropdown-menu>
 		</el-dropdown>
     </div>
@@ -39,20 +39,22 @@
 			async handleCommand(command) {
 				if (command == 'home') {
 					this.$router.push('/manage');
-				}else if(command == 'signout'){
-					const res = await signout()
-					if (res.status == 1) {
+				}else if(command == 'logout'){
+					this.$axios.get('/logout')
+					.then((response)=> {
 						this.$message({
-	                        type: 'success',
-	                        message: '退出成功'
-	                    });
-	                    this.$router.push('/');
-					}else{
+							type: 'success',
+							message: '注销成功'
+						});
+						this.$router.push('/');
+					})
+					.catch((error)=> {
+						console.log(error);
 						this.$message({
-	                        type: 'error',
-	                        message: res.message
-	                    });
-					}
+							type: 'error',
+							message: '注销失败'
+						});
+					})
 				}
 			},
 		}
